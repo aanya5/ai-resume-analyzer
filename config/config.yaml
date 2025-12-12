@@ -1,0 +1,7 @@
+similarity:
+  method: "tfidf"
+  top_k: 10
+
+ats:
+  keyword_weight: 0.6
+  semantic_weight: 0.4

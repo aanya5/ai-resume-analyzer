@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-top: 15px; color: #555; }
+        textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; font-family: inherit; resize: vertical; }
+        input[type="file"] { margin-top: 5px; width: 100%; }
+        button { background-color: #007bff; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; transition: background 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .result-box { margin-top: 25px; padding: 20px; background-color: #e9f7ef; border: 1px solid #c3e6cb; border-radius: 6px; display: none; }
+        .score { font-size: 24px; font-weight: bold; color: #28a745; text-align: center; }
+        .details { margin-top: 10px; font-size: 14px; color: #555; }
+        .loading { text-align: center; display: none; margin-top: 10px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 AI Resume Analyzer</h1>
+    
+    <label for="resumeFile">1. Upload Resume (PDF/DOCX/TXT)</label>
+    <input type="file" id="resumeFile" accept=".pdf,.docx,.txt">
+
+    <label for="jobDesc">2. Paste Job Description</label>
+    <textarea id="jobDesc" placeholder="Paste the job description here..."></textarea>
+
+    <button onclick="analyzeResume()">Analyze Now</button>
+    <p class="loading" id="loadingText">Analyzing... please wait...</p>
+
+    <div class="result-box" id="resultBox">
+        <div class="score" id="scoreDisplay">Match Score: 0%</div>
+        <div class="details" id="detailsDisplay"></div>
+    </div>
+</div>
+
+<script>
+    async function analyzeResume() {
+        const fileInput = document.getElementById('resumeFile');
+        const jobDesc = document.getElementById('jobDesc').value;
+        const resultBox = document.getElementById('resultBox');
+        const loadingText = document.getElementById('loadingText');
+
+        if (!fileInput.files[0]) { alert("Please upload a resume file."); return; }
+        if (!jobDesc.trim()) { alert("Please enter a job description."); return; }
+
+        // Show loading state
+        loadingText.style.display = 'block';
+        resultBox.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('resume', fileInput.files[0]);
+        formData.append('job_description', jobDesc);
+
+        try {
+            const response = await fetch('/analyze_file', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('scoreDisplay').innerText = `Match Score: ${data.score}%`;
+                document.getElementById('detailsDisplay').innerHTML = `
+                    <p><strong>Keyword Match:</strong> ${(data.details.keyword_score * 100).toFixed(1)}%</p>
+                    <p><strong>Semantic Match:</strong> ${(data.details.semantic_score * 100).toFixed(1)}%</p>
+                `;
+                resultBox.style.display = 'block';
+            } else {
+                alert("Error: " + (data.error || "Unknown error"));
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Something went wrong!");
+        } finally {
+            loadingText.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
